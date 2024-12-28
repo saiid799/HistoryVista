@@ -1,100 +1,87 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import Search from "@/components/Search";
+import CityHistory from "@/components/CityHistory";
+import LoadingState from "@/components/LoadingState";
+import type { CityData } from "@/types/city";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [searchState, setSearchState] = useState<{
+    loading: boolean;
+    error?: string;
+    data?: CityData;
+  }>({
+    loading: false,
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  const handleSearch = async (city: string) => {
+    setSearchState({ loading: true });
+
+    try {
+      const response = await fetch(
+        `/api/city-history?city=${encodeURIComponent(city)}`
+      );
+      const result = await response.json();
+
+      if (!result.success) {
+        setSearchState({
+          loading: false,
+          error: result.error || "Failed to fetch city history",
+        });
+        return;
+      }
+
+      setSearchState({
+        loading: false,
+        data: result.data,
+      });
+    } catch {
+      // Removed unused 'err' parameter
+      setSearchState({
+        loading: false,
+        error: "Failed to fetch city history. Please try again.",
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="py-20 px-4 text-center">
+        <h1 className="font-motter text-5xl mb-6 text-primary">
+          City History Explorer
+        </h1>
+        <p className="font-blogger text-xl mb-12 text-primary/80 max-w-2xl mx-auto">
+          Discover the rich history of cities around the world through an
+          interactive journey through time. Powered by AI for accurate and
+          engaging historical insights.
+        </p>
+        <Search onSearch={handleSearch} />
+      </header>
+
+      <main className="px-4 pb-20">
+        {searchState.loading ? (
+          <LoadingState />
+        ) : searchState.error ? (
+          <div className="max-w-2xl mx-auto text-center py-12">
+            <div className="inline-flex items-center gap-2 text-destructive mb-4">
+              <AlertTriangle className="w-6 h-6" />
+              <span className="font-blogger text-lg">Error</span>
+            </div>
+            <p className="font-blogger text-xl text-primary/60">
+              {searchState.error}
+            </p>
+          </div>
+        ) : searchState.data ? (
+          <CityHistory data={searchState.data} />
+        ) : null}
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      <footer className="py-8 text-center text-primary/60">
+        <p className="font-blogger text-sm">
+          Powered by Gemini AI • Explore historical cities
+        </p>
       </footer>
     </div>
   );
